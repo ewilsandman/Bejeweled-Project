@@ -10,10 +10,12 @@ public class GameHandlerScript : MonoBehaviour
     private float[] PositionsX;
     private float[] PositionsY;
     private Dictionary<Vector2, GameObject> _getGemObject = new Dictionary<Vector2, GameObject>(); // name lol
+    private List<GameObject> MarkedForDeath;
     private GameObject gem1;
     private GameObject gem2;
     
     public GameObject Canvas;
+    public ScoreScript score;
     public GameObject BlueGem;
     public GameObject RedGem;
     public GameObject YellowGem;
@@ -24,6 +26,7 @@ public class GameHandlerScript : MonoBehaviour
     void Start()
     {
         // 
+        MarkedForDeath = new List<GameObject>();
         PositionsX = new float[8];
         PositionsY = new float[8];
         float currentpositionX = transform.position.x;
@@ -125,6 +128,10 @@ public class GameHandlerScript : MonoBehaviour
                             CentralObject.GetComponent<SpriteRenderer>().color = Color.magenta;
                             _getGemObject[new Vector2(x + 1, y)].GetComponent<SpriteRenderer>().color = Color.magenta;
                             _getGemObject[new Vector2(x - 1, y)].GetComponent<SpriteRenderer>().color = Color.magenta;
+                            MarkedForDeath.Add(_getGemObject[new Vector2(x + 1, y)].gameObject);
+                            MarkedForDeath.Add(_getGemObject[new Vector2(x - 1, y)].gameObject);
+                            MarkedForDeath.Add(CentralObject);
+                            
                         }
                     }
                 }
@@ -137,11 +144,20 @@ public class GameHandlerScript : MonoBehaviour
                             CentralObject.GetComponent<SpriteRenderer>().color = Color.magenta;
                             _getGemObject[new Vector2(x, y + 1)].GetComponent<SpriteRenderer>().color = Color.magenta;
                             _getGemObject[new Vector2(x, y - 1)].GetComponent<SpriteRenderer>().color = Color.magenta;
+                            MarkedForDeath.Add(_getGemObject[new Vector2(x, y + 1)].gameObject);
+                            MarkedForDeath.Add(_getGemObject[new Vector2(x, y - 1)].gameObject);
+                            MarkedForDeath.Add(CentralObject);
                         }
                     }
                 }
             }
         }
+        foreach (var Obj in MarkedForDeath)
+        {
+            Destroy(Obj);
+            score.Addscore(10);
+        }
+        MarkedForDeath.Clear();
     }
     
     private void OnDrawGizmos()
@@ -153,11 +169,5 @@ public class GameHandlerScript : MonoBehaviour
               Gizmos.DrawSphere(new Vector3(X,Y), 0.2f);
             }
         }*/
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
