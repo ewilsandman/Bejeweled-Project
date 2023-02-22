@@ -13,7 +13,7 @@ public class GemPrefabScript : MonoBehaviour
         
     }
 
-    private void OnMouseDown() // emils bootleg events (tm)
+    private void OnMouseDown()
     {
         gameHandler.HandleMove(gameObject);
     }
