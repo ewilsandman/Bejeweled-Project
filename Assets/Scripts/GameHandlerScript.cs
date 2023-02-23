@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -15,7 +16,6 @@ public class GameHandlerScript : MonoBehaviour
     private GameObject gem1;
     private GameObject gem2;
     
-    public GameObject Canvas;
     public ScoreScript score;
     public GameObject BlueGem;
     public GameObject RedGem;
@@ -23,6 +23,8 @@ public class GameHandlerScript : MonoBehaviour
     public GameObject OrangeGem;
     public GameObject PurpleGem;
     public GameObject GreenGem;
+
+    private bool Stopped = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -94,6 +96,8 @@ public class GameHandlerScript : MonoBehaviour
 
     public void HandleMove(GameObject gem)
     {
+        Vector2 Internalpos1;
+        Vector2 Internalpos2;
         if (gem1 == null)
         {
             gem1 = gem;
@@ -103,22 +107,39 @@ public class GameHandlerScript : MonoBehaviour
             gem1 = null;
             gem2 = null;
         }   
-        else// does not check if valid move yet, might be possible via checking if close in number
+        else
         {
             gem2 = gem;
-            Debug.Log(gem2.GetComponent<GemPrefabScript>().InternalPos);
-            Debug.Log(gem1.GetComponent<GemPrefabScript>().InternalPos);
-            SwapPos(gem1,gem2);
-            Debug.Log(gem2.GetComponent<GemPrefabScript>().InternalPos);
-            Debug.Log(gem1.GetComponent<GemPrefabScript>().InternalPos);
-            gem1 = null;
-            gem2 = null;
-            ScanGrid();
+            Internalpos1 = gem1.GetComponent<GemPrefabScript>().InternalPos;
+            Internalpos2 = gem2.GetComponent<GemPrefabScript>().InternalPos;
+            if (Math.Abs(Internalpos1.x - Internalpos2.x) < 1)
+            {
+                Debug.Log("yep thats beside");
+                SwapPos(gem1,gem2); 
+                gem1 = null;
+                gem2 = null;
+                ScanGrid(); 
+            }
+            else if (Math.Abs(Internalpos1.y - Internalpos2.y) < 1)
+            {
+                Debug.Log("yep thats above");
+                SwapPos(gem1,gem2); 
+                gem1 = null;
+                gem2 = null;
+                ScanGrid();
+            }
+            else
+            {
+                Debug.Log("nice try buddy");
+                gem2 = null;
+                gem1 = null;
+            }
         }
     }
 
     public void ScanGrid()
     {
+        Stopped = true;
         for (int y = 0; y < 8; y++)
         {
             for (int x = 0; x < 8; x++)
@@ -168,41 +189,26 @@ public class GameHandlerScript : MonoBehaviour
         }*/
        foreach (GameObject Doomed in MarkedForDeath)
        {
-           /* bool foundSwitch = false;
-            Vector2 DoomedPos = Doomed.GetComponent<GemPrefabScript>().InternalPos;
-            float Ycounter = DoomedPos.y;
-            for (Ycounter = DoomedPos.y; Ycounter < 8; Ycounter++)
-            {
-                GameObject Other = _getGemObject[new Vector2(DoomedPos.x, Ycounter)];
-                if (MarkedForDeath.Contains(Other))
-                {
-                }
-                else
-                {
-                    Debug.Log("Swapping");
-                    Moved.Add(Other);
-                    SwapPos(Doomed, Other);
-                    foundSwitch = true;
-                    break;
-                }*/
-          _getGemObject.Remove(Doomed.GetComponent<GemPrefabScript>().InternalPos);
+           _getGemObject.Remove(Doomed.GetComponent<GemPrefabScript>().InternalPos);
            Destroy(Doomed);
            score.Addscore(10);
        }
        MarkedForDeath.Clear();
        MarkedForDeath.TrimExcess();
-       
+
        for (int y = 0; y < 8; y++)
        {
            for (int x = 0; x < 8; x++)
            {
-              // Debug.Log("Scanning" + x + y);
+               // Debug.Log("Scanning" + x + y);
                if (!_getGemObject.ContainsKey(new Vector2(x, y)))
                {
-                  // Debug.Log("Found hole at" + x + y);
+                   // Debug.Log("Found hole at" + x + y);
+                   Stopped = false;
                    if (y == 7)
                    {
-                       GameObject newGem = Instantiate(GetRandomGem(), new Vector3(PositionsX[x], PositionsY[y], 0f), Quaternion.identity);
+                       GameObject newGem = Instantiate(GetRandomGem(),
+                           new Vector3(PositionsX[x], PositionsY[y], 0f), Quaternion.identity);
                        newGem.GetComponent<GemPrefabScript>().InternalPos = new Vector2(x, y);
                        newGem.GetComponent<GemPrefabScript>().gameHandler = this;
                        _getGemObject.Add(new Vector2(x, y), newGem);
@@ -223,9 +229,11 @@ public class GameHandlerScript : MonoBehaviour
                                break;
                            }
                        }
+
                        if (possibleNew == null)
                        {
-                           GameObject newGem = Instantiate(GetRandomGem(), new Vector3(PositionsX[x], PositionsY[y], 0f), Quaternion.identity);
+                           GameObject newGem = Instantiate(GetRandomGem(),
+                               new Vector3(PositionsX[x], PositionsY[y], 0f), Quaternion.identity);
                            newGem.GetComponent<GemPrefabScript>().InternalPos = new Vector2(x, y);
                            newGem.GetComponent<GemPrefabScript>().gameHandler = this;
                            _getGemObject.Add(new Vector2(x, y), newGem);
@@ -234,6 +242,12 @@ public class GameHandlerScript : MonoBehaviour
                }
            }
        }
+
+       if (!Stopped)
+       {
+           ScanGrid();
+       }
+       
     }
 
    /* private void PrepareNextRound()
